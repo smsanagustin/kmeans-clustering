@@ -194,7 +194,7 @@ else:
     output_file.close()
     
     # plot output
-    colors = ["blue", "green", "yellow", "black", "orange", "indigo", "violet", "pink", "peach", "grey"]
+    colors = ["blue", "green", "yellow", "black", "orange", "indigo", "violet", "pink", "cyan", "grey"]
     
     # choose colors
     picked_colors = []
