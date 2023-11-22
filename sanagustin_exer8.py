@@ -21,11 +21,14 @@ while True:
     try:
         column1 = int(input("Choose first column [1-14]: "))
         column2 = int(input("Choose second column [1-14]: "))
-        if column1 in range(1,15) and column2 in range(1,15):
+        if column1 in range(1,15) and column2 in range(1,15) and column1 != column2:
             columns = [column1-1, column2-1] # store column number as index
             break
-        else: 
-            print("Choose valid columns [1-14].")
+        else:
+            if column1 == column2:
+                print("Please choose 2 different columns!")
+            else:
+                print("Please choose a valid column [1-14].")
     except:
         print("Please choose valid columns [1-14]")
         
@@ -85,8 +88,8 @@ def getVectors(filename):
     return first_vector, second_vector
         
 # maximum of 10 clusters only
-if k > 10:
-    print("Maximum of 10 clusters only!")
+if k > 10 or k < 1:
+    print("Invalid count of clusters!")
 else:
     # read csv file for sample input
     data_set = getVectors("Wine.csv")
