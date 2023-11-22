@@ -12,25 +12,38 @@ y_label = ""
 while True:
     try:
         k = int(input("Enter number of clusters and centroids: ")) # number of clusters and centroids
-        break
+        if k in range(1, 11):
+            break
+        else:
+            print("Please input values form 1-10 only")
+            continue
     except:
         print("Please enter integers only.")
         
+# get list of elements
+file1 = open("Wine.csv", 'r')
+line = file1.readline()
+elements = line.strip().split(",")
+ 
 # get user input for columns of data
+# ask for user input
+print("Please choose 2 attributes from the ff.")
+for element in elements:
+    print(element)
+    
 while True:
-    try:
-        column1 = int(input("Choose first column [1-14]: "))
-        column2 = int(input("Choose second column [1-14]: "))
-        if column1 in range(1,15) and column2 in range(1,15) and column1 != column2:
-            columns = [column1-1, column2-1] # store column number as index
-            break
-        else:
-            if column1 == column2:
-                print("Please choose 2 different columns!")
-            else:
-                print("Please choose a valid column [1-14].")
-    except:
-        print("Please choose valid columns [1-14]")
+    input1 = input("Enter first attribute: ")
+    input2 = input("Enter second attribute: ")
+    if input1 in elements and input2 in elements and not (input1 == input2):
+        break
+    else:
+        print("Please choose valid attributes!")
+        continue
+    
+# convert user input to its appropriate index 
+column1 = elements.index(input1)
+column2 = elements.index(input2)
+columns = [column1, column2]
         
 # generates random centroid
 def getRandomCentroid(length):
@@ -87,141 +100,137 @@ def getVectors(filename):
     file1.close()
     return first_vector, second_vector
         
-# maximum of 10 clusters only
-if k > 10 or k < 1:
-    print("Invalid count of clusters!")
-else:
-    # read csv file for sample input
-    data_set = getVectors("Wine.csv")
-    vector1 = data_set[0]
-    vector2 = data_set[1]
-    
-    previous_centroids = [] # list of lists; each list is a coordinate
-    current_centroids = []
-    
-    # generate initial centroids
-    for i in range(k):
-        # loop until unique centroid is found
-        while True:
-            centroid = getRandomCentroid(len(vector1))
-            if centroid not in current_centroids:
-                current_centroids.append(centroid)
-                break
-            continue
-    
-    # uncomment this value for checking (works when k = 2)
-    # current_centroids.append([2.14, 100])
-    # current_centroids.append([2.5, 113])
-    
-    print("initial", current_centroids)
-        
-    # dictionary to classify points
-    classified_points = {}
-    
-    # classify points until current centroids matches previous centroids  
+# read csv file for sample input
+data_set = getVectors("Wine.csv")
+vector1 = data_set[0]
+vector2 = data_set[1]
+
+previous_centroids = [] # list of lists; each list is a coordinate
+current_centroids = []
+
+# generate initial centroids
+for i in range(k):
+    # loop until unique centroid is found
     while True:
-        # initialize / reset values
-        for i in range(k):
-            classified_points[i] = [] # initialize list for each centroid
-        
-        # loop through all the points
-        vector_length = len(vector1)
-        for i in range(vector_length):
-            point = []
-            point.append(vector1[i])
-            point.append(vector2[i])
-            
-            point_distances = []
-            
-            # get the point's euclidian distance from all the centroids
-            for j in range(k):
-                centroid = current_centroids[j]
-                point_distances.append(getEuclidianDistance(point, centroid))
-            
-            # get the minimum out of all the distances
-            min_distance = min(point_distances) 
-            min_index = point_distances.index(min_distance)
-            classified_points[min_index].append(point)
-            
-        # save centroid as previous
-        previous_centroids = []
-        for i in range(k):
-            previous_centroids.append(current_centroids[i])
-        
-        # choose new centroids
-        for i in range(k):
-            x_sum = 0
-            y_sum = 0
-            points = classified_points[i] # gets all the points under class i
-            class_count = len(points)
-            for j in range(len(points)):
-                x_sum += points[j][0]
-                y_sum += points[j][1]
-                
-            try:
-                new_x = x_sum / class_count
-            except:
-                new_x = 0
-            try:
-                new_y = y_sum / class_count
-            except:
-                new_y = 0
-            new_point = [new_x, new_y]
-            current_centroids[i] = new_point
-        # checks if current centroids matches previous 
-        counter = 0
-        for i in range(k):
-            if current_centroids[i] in previous_centroids:
-                counter += 1
-                 
-        if counter == k:
+        centroid = getRandomCentroid(len(vector1))
+        if centroid not in current_centroids:
+            current_centroids.append(centroid)
             break
-        
-    # print all points
+        continue
+
+# uncomment this value for checking (works when k = 2)
+# current_centroids.append([2.14, 100])
+# current_centroids.append([2.5, 113])
+
+print("initial", current_centroids)
+    
+# dictionary to classify points
+classified_points = {}
+
+# classify points until current centroids matches previous centroids  
+while True:
+    # initialize / reset values
     for i in range(k):
-        print(f"centroid {i}: {previous_centroids[i]}")
-        points = classified_points[i]
-        for j in range(len(points)):
-            print(points[j])
-            
-    # write results to output.csv
-    output_file = open("output.csv", "w")
-    for i in range(k): 
-        string = "Centroid: " + str(i) + " " + str(previous_centroids[i]) + "\n"
-        output_file.write(string) # add \n then write to file
-        points = classified_points[i]
-        for j in range(len(points)):
-            string = str(points[j]) + "\n"
-            output_file.write(string)
-        output_file.write("\n")
-    output_file.close()
+        classified_points[i] = [] # initialize list for each centroid
     
-    # plot output
-    colors = ["blue", "green", "yellow", "black", "orange", "indigo", "violet", "pink", "cyan", "grey"]
-    
-    # choose colors
-    picked_colors = []
-    for i in range(k):
-        x_values = []
-        y_values = []
-        while True:
-            index = random.randint(0, 9)
-            color = colors[index]
-            if color not in picked_colors:
-                picked_colors.append(color)
-                break
-        points = classified_points[i]
-        for j in range(len(points)):
-            point = points[j]
-            x_values.append(point[0]) 
-            y_values.append(point[1])
-            
-        # plot points 
-        plt.scatter(x_values, y_values, c=color) 
+    # loop through all the points
+    vector_length = len(vector1)
+    for i in range(vector_length):
+        point = []
+        point.append(vector1[i])
+        point.append(vector2[i])
         
-    # add label to x and y
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title("Kmeans Scatter Plot")
+        point_distances = []
+        
+        # get the point's euclidian distance from all the centroids
+        for j in range(k):
+            centroid = current_centroids[j]
+            point_distances.append(getEuclidianDistance(point, centroid))
+        
+        # get the minimum out of all the distances
+        min_distance = min(point_distances) 
+        min_index = point_distances.index(min_distance)
+        classified_points[min_index].append(point)
+        
+    # save centroid as previous
+    previous_centroids = []
+    for i in range(k):
+        previous_centroids.append(current_centroids[i])
     
-    plt.show()
+    # choose new centroids
+    for i in range(k):
+        x_sum = 0
+        y_sum = 0
+        points = classified_points[i] # gets all the points under class i
+        class_count = len(points)
+        for j in range(len(points)):
+            x_sum += points[j][0]
+            y_sum += points[j][1]
+            
+        try:
+            new_x = x_sum / class_count
+        except:
+            new_x = 0
+        try:
+            new_y = y_sum / class_count
+        except:
+            new_y = 0
+        new_point = [new_x, new_y]
+        current_centroids[i] = new_point
+    # checks if current centroids matches previous 
+    counter = 0
+    for i in range(k):
+        if current_centroids[i] in previous_centroids:
+            counter += 1
+                
+    if counter == k:
+        break
+    
+# print all points
+for i in range(k):
+    print(f"centroid {i}: {previous_centroids[i]}")
+    points = classified_points[i]
+    for j in range(len(points)):
+        print(points[j])
+        
+# write results to output.csv
+output_file = open("output.csv", "w")
+for i in range(k): 
+    string = "Centroid: " + str(i) + " " + str(previous_centroids[i]) + "\n"
+    output_file.write(string) # add \n then write to file
+    points = classified_points[i]
+    for j in range(len(points)):
+        string = str(points[j]) + "\n"
+        output_file.write(string)
+    output_file.write("\n")
+output_file.close()
+
+# plot output
+colors = ["blue", "green", "yellow", "black", "orange", "indigo", "violet", "pink", "cyan", "grey"]
+
+# choose colors
+picked_colors = []
+for i in range(k):
+    x_values = []
+    y_values = []
+    while True:
+        index = random.randint(0, 9)
+        color = colors[index]
+        if color not in picked_colors:
+            picked_colors.append(color)
+            break
+    points = classified_points[i]
+    for j in range(len(points)):
+        point = points[j]
+        x_values.append(point[0]) 
+        y_values.append(point[1])
+        
+    # plot points 
+    plt.scatter(x_values, y_values, c=color) 
+    
+# add label to x and y
+plt.xlabel(x_label)
+plt.ylabel(y_label)
+plt.title("Kmeans Scatter Plot")
+
+plt.show()
